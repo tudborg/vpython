@@ -104,7 +104,7 @@ function run_show_usage () {
     echo "    vpython --help                                this help"
     echo "    vpython --pip </path/to/env> [<pip_ags>...]   call the virtualenv pip"
     echo "    vpython --install </path/to/new/env>          install a new virtualenv"
-    echo "    vpython --find </path/to/search/for/env>      return virtualenv path if found, else exits with code 1"
+    echo "    vpython --find </path/to/search/for/env>      return virtualenv path if found, else exits with non-0"
     echo "    vpython <python_file>                         call a python file inside a virtualenv"
     echo "    vpython <directory>                           start a python shell inside a virtualenv"
 }
