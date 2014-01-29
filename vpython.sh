@@ -10,17 +10,11 @@
 #
 
 # TODO:
-#   - Look in more than one folder for the virtualenv
 #   - Create autoupdate option
  
  
-# You can change this if you like, this is the name if the virtualenv folder
-# we are going to search for
-DEFAULT_ENV_NAME='.virtualenv'
- 
- 
 # Okay, hands off from here on;
-ENV_NAME=${ENV_NAME:-$DEFAULT_ENV_NAME}
+ENV_NAME=${ENV_NAME:-'.virtualenv'}
  
  
 # Check deps
@@ -47,19 +41,14 @@ function abspath () {
 function envpath () {
     # get the virtualenv path if any
     local SOURCE="$(abspath "$1")"
-
-    if [ 127 -eq $? ]; then
-        return 127
-    fi
+    [ 127 -eq $? ] && return 127
 
     # Resolve link if needed
     while [ -h "$SOURCE" ]; do
         SOURCE="$(readlink "$SOURCE")"
         # if resolved does not exist, stop.
         # TODO: issue with relative links here
-        if [ ! -e "$SOURCE" ]; then
-            return 127
-        fi
+        [ ! -e "$SOURCE" ] && return 127
     done
      
     # Look for the python executable inside the virtualenv folder
@@ -71,20 +60,24 @@ function envpath () {
         local DIRNAME="$(dirname "$SOURCE")"
     fi
 
-    while [ ! -d "${DIRNAME}/${ENV_NAME}/bin" ]; do
+    #we only need to look 3 dirs down, since that is the nest-ness (yes, that is now a word)
+    #of virtualenv structure, we are looking for an executable, (the env/bin/python)
+    local pythons
+    local env
+    while [ ! "$env" ]; do
+        pythons=$(find $DIRNAME -maxdepth 3 -executable -path "$DIRNAME/*/bin/python" 2>/dev/null | head -n 1)
+        env="$(echo ${pythons:${#DIRNAME}} | cut -d"/" -f2)"
+        #break if we reached root
+        ([ "$DIRNAME" == "/" ] || [ "$env" ]) && break
+        #else up one dir
         DIRNAME="$(dirname "$DIRNAME")"
-        if [ "$DIRNAME" == "/" ]; then
-            break
-        fi
     done
-     
+
     # Ensure that we did not hit root directory
-    if [ "$DIRNAME" == "/" ] || [ ! -d "${DIRNAME}/${ENV_NAME}/bin" ]; then
-        #maybe just default to system python here? hmm..
-        return 120
-    fi
+    [ "$DIRNAME" == "/" ] && return 120
+
     # We found a virtualenv dir
-    echo "${DIRNAME}/${ENV_NAME}"
+    echo "${DIRNAME}/${env}"
     return 0
 }
 
@@ -126,10 +119,7 @@ function run_install () {
 
 #output found virtualenv path
 function run_find () {
-    if [ 1 -gt $# ]; then
-        echo "Usage: vpython --find </path/to/search>" >&2
-        exit 2
-    fi
+    [ 1 -gt $# ] && echo "Usage: vpython --find </path/to/search>" >&2 && exit 2
     local venv
     venv="$(envpath "$1")"
     code=$?
@@ -148,10 +138,7 @@ function run_in_env () {
     local path=$2
     shift && shift
 
-    if [ ! "$path" ]; then
-        # if no path given, default to current working directory
-        path="$(pwd)"
-    fi
+    [ ! "$path" ] && path="$(pwd)"
 
     export VIRTUAL_ENV
     VIRTUAL_ENV="$(envpath "$path")"
