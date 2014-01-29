@@ -5,20 +5,10 @@
 # Very useful for cli applications that you just link to somewhere in your path
 # but still want to install deps inside a virtualenv.
 #
-# Maintained by https://github.com/tbug @ https://gist.github.com/tbug/8640347
+# Currently maintained by https://github.com/tbug
+# at https://github.com/tbug/vpython
+#
 
-# Usage:
-#   Place this script somewhere in your path, like /usr/bin/vpython
-#   In your python files, instead of using #!/usr/bin/python 
-#   as your first line, use #!/usr/bin/vpython
-#   Make that python file executable and call it from anywhere,
-#   if it is inside a virtualenv, it will find that virtualenv and call
-#   it with the virtualenv python link instead of your system one.
-#
-#   Oh, and you can ofc. also just call your python files without making them executable,
-#   just use `vpython my_file.py` instead of the regular `python my_file.py`
-#
- 
 # TODO:
 #   - Look in more than one folder for the virtualenv
 #   - Create autoupdate option
@@ -59,7 +49,6 @@ function envpath () {
     local SOURCE="$(abspath "$1")"
 
     if [ 127 -eq $? ]; then
-        echo "directory or file \"$1\" does not exist" 1>&2
         return 127
     fi
 
@@ -91,17 +80,26 @@ function envpath () {
      
     # Ensure that we did not hit root directory
     if [ "$DIRNAME" == "/" ] || [ ! -d "${DIRNAME}/${ENV_NAME}/bin" ]; then
-        echo "could not find virtualenv" 1>&2
         #maybe just default to system python here? hmm..
-        return 1
+        return 120
     fi
     # We found a virtualenv dir
     echo "${DIRNAME}/${ENV_NAME}"
     return 0
 }
 
+function printcode () {
+    case $1 in
+        0) ;; #0 is ok, no message
+        120) echo "could not find virtualenv";;
+        127) echo "not a valid path";;
+        *) echo "unknown error";;
+    esac
+    return $1
+}
+
 # Our usage help text
-function show_usage () {
+function run_show_usage () {
     echo "Usage:"
     echo "    vpython --help                                this help"
     echo "    vpython --pip </path/to/env> [<pip_ags>...]   call the virtualenv pip"
@@ -111,46 +109,11 @@ function show_usage () {
     echo "    vpython <directory>                           start a python shell inside a virtualenv"
 }
 
-# Install via pip
-function pip_install () {
-    if [ 1 -gt $# ]; then
-        echo "Usage: vpython --pip </path/to/env> [<pip_ags>...]" 1>&2
-        exit 1
-    fi
-
-    local VIRTUAL_ENV="$(envpath "$1")"
-
-    envpath_code=$?
-    case $envpath_code in
-        0) ;; #0 is ok
-        1) echo "could not find virtualenv" 1>&2 && exit 1;;
-        127) echo "$1 is not a valid path" 1>&2 && exit 127;;
-        *) echo "unknown error" 1>&2 && exit $envpath_code;;
-    esac
-    shift #shift off the virtualenv path
-
-    # Instead of sourcing the "activate" script, just do the same-ish
-    # We need to set the path, obviously
-    export PATH="$VIRTUAL_ENV/bin:$PATH"
-    # And unset the PYTHONHOME
-    unset PYTHONHOME
-    #invoke pip with the rest of the arguments
-    $VIRTUAL_ENV/bin/pip $@
-    exit $? # exit with pip exit code
-}
-
  # Install a new virtualenv
-function virtualenv_install () {
+function run_install () {
     local base="$(abspath "$1")"
-    local envdir=""
-    #check for dir not exist
-    if [ 127 -eq $? ]; then
-        echo "directory or file \"$1\" does not exist" 1>&2
-        exit 127
-    fi
-
+    local envdir
     shift #shift off the first arg (the dir)
-
     if [ -d "$base" ]; then
         #if dir given, install under env_name
         envdir="$base/$ENV_NAME"
@@ -161,68 +124,72 @@ function virtualenv_install () {
     exit $?
 }
 
-function virtualenv_find () {
+#output found virtualenv path
+function run_find () {
     if [ 1 -gt $# ]; then
-        echo "Usage: vpython --find </path/to/search>" 1>&2
+        echo "Usage: vpython --find </path/to/search>" >&2
         exit 2
     fi
-    local VIRTUAL_ENV
-    VIRTUAL_ENV="$(envpath "$1")"
-    envpath_code=$?
-    case $envpath_code in
-        0) ;; #0 is ok
-        1) echo "could not find virtualenv" 1>&2 && exit 1;;
-        127) echo "$1 is not a valid path" 1>&2 && exit 127;;
-        *) echo "unknown error" 1>&2 && exit $envpath_code;;
-    esac
-    echo $VIRTUAL_ENV
-    exit 0
+    local venv
+    venv="$(envpath "$1")"
+    code=$?
+    printcode $code >&2
+    #if 0, show venv and exit 0
+    [ 0 -eq $code ] && echo $venv && exit 0
+    #else just exit with code
+    exit $code
 }
 
+#find a virtualenv on path given, run python inside
+function run_in_env () {
+    #pass binary relative to env folder (like /bin/python) as first arg
+    #and path to script or folder as second arg
+    local program=$1
+    local path=$2
+    shift && shift
 
-function vpython_run () {
-    local path=()
-    if [ ! "$1" ]; then
-        # if no arg given, default to current working directory
+    if [ ! "$path" ]; then
+        # if no path given, default to current working directory
         path="$(pwd)"
-    else
-        path=$1
     fi
 
+    export VIRTUAL_ENV
     VIRTUAL_ENV="$(envpath "$path")"
-    envpath_code=$?
-    case $envpath_code in
-        0) ;; #0 is ok
-        1) echo "could not find virtualenv" 1>&2 && exit 1;;
-        127) echo "$path is not a valid path" 1>&2 && exit 127;;
-        *) echo "unknown error" 1>&2 && exit $envpath_code;;
-    esac
+    retcode=$?
+    #if non-0 return, show a message on stderr and exit with code
+    if [ ! 0 -eq $retcode ]; then
+        [ ! $VPYTHON_QUIET ] && printcode $retcode >&2
+        exit $retcode
+    fi
 
     # Instead of sourcing the "activate" script, just do the same-ish
+    # cus' "people" bitch about using the activate anyway, and
+    # this is essentially what it does:
     # We need to set the path, obviously
     export PATH="$VIRTUAL_ENV/bin:$PATH"
     # And unset the PYTHONHOME
     unset PYTHONHOME
 
-    #check if we should pass any args to python
+    #check if we should pass the path as the first arg to python
+    #(we should if it is a python file, so, not a directory, essentially)
     local args=()
-    if [ -d $1 ]; then
-        echo "Using virtualenv at \"$VIRTUAL_ENV\"" 1>&2
-        args=()
-    else
-        echo "Using virtualenv at \"$VIRTUAL_ENV\"" 1>&2
+    if [ -d $path ]; then
         args=$@
+    else
+        args=$path $@
     fi
 
+    [ ! $VPYTHON_QUIET ] && echo "Using virtualenv at \"$VIRTUAL_ENV\"" >&2
+
     # Now call the $PROGRAM inside our env
-    $VIRTUAL_ENV/bin/python $args
+    $VIRTUAL_ENV$program $args
 
     exit $?
 }
 
 # Parse options, run accordingly
 # inspiration from http://stackoverflow.com/questions/17016007/bash-getopts-optional-arguments
-function parseopts() {
+function run_main() {
     local argv=()
     local opt=()
     while [ $# -gt 0 ]; do
@@ -230,20 +197,21 @@ function parseopts() {
         shift
         case ${opt} in
             -i|--install)
-                virtualenv_install $@ && exit;;
+                run_install $@ && exit;;
             -f|--find)
-                virtualenv_find $@ && exit;;
+                run_find $@ && exit;;
             -p|--pip)
-                pip_install $@ && exit;;
+                run_in_env /bin/pip $@ && exit $?;;
             -h|--help)
-                show_usage && exit;;
-            *) #anything else than the above should be passed to vpython_run
-                break
+                run_show_usage && exit;;
+            -q|--quiet)
+                VPYTHON_QUIET=1
+                run_in_env /bin/python $@ && exit $?;;
+            *) #anything else than the above should be run with python, including $opt
+                run_in_env /bin/python $opt $@ && exit $?;;
         esac
     done
-    vpython_run $opt $@
-    exit $?
 }
 
-parseopts $@
+run_main $@
 exit $?
