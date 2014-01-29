@@ -184,7 +184,7 @@ function run_autoupdate () {
     #autoupdate this file from the github master branch
     local self="$(linkresolve ${BASH_SOURCE[0]})"
     echo "moving $self to $self.old" >&2
-    mv $self $self.old
+    cp $self $self.old
     echo "downloading new script to $self..." >&2
     curl "$SCRIPT_URL" > $self
 }
