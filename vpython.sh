@@ -183,13 +183,10 @@ function run_in_env () {
 function run_autoupdate () {
     #autoupdate this file from the github master branch
     local self="$(linkresolve ${BASH_SOURCE[0]})"
-    local tmpscript="$(tempfile)"
-    echo "downloading new script..." >&2
-    curl "$SCRIPT_URL" > $tmpscript
     echo "moving $self to $self.old" >&2
     mv $self $self.old
-    echo "moving script to $self" >&2
-    mv $tmpscript $self
+    echo "downloading new script to $self..." >&2
+    curl "$SCRIPT_URL" > $self
 }
 
 # Parse options, run accordingly
