@@ -13,9 +13,9 @@
 #   - Create autoupdate option
  
  
-# Okay, hands off from here on;
 ENV_NAME=${ENV_NAME:-'.virtualenv'}
- 
+SCRIPT_URL="https://raw.github.com/tbug/vpython/master/vpython.sh"
+
  
 # Check deps
 [ ! $(which virtualenv) ] && echo "virtualenv not found" && exit;
@@ -38,18 +38,24 @@ function abspath () {
     fi
 }
 
+function linkresolve () {
+    # Resolve link if needed
+    local path=$1
+    while [ -h "$path" ]; do
+        path="$(readlink "$path")"
+        # if resolved does not exist, stop.
+        # TODO: issue with relative links here
+        [ ! -e "$path" ] && return 127
+    done
+    echo $path
+}
+
 function envpath () {
     # get the virtualenv path if any
     local SOURCE="$(abspath "$1")"
     [ 127 -eq $? ] && return 127
 
-    # Resolve link if needed
-    while [ -h "$SOURCE" ]; do
-        SOURCE="$(readlink "$SOURCE")"
-        # if resolved does not exist, stop.
-        # TODO: issue with relative links here
-        [ ! -e "$SOURCE" ] && return 127
-    done
+    SOURCE="$(linkresolve $SOURCE)"
      
     # Look for the python executable inside the virtualenv folder
     # We could do this even more agressively by looking inside all folders
@@ -176,7 +182,7 @@ function run_in_env () {
 
 # Parse options, run accordingly
 # inspiration from http://stackoverflow.com/questions/17016007/bash-getopts-optional-arguments
-function run_main() {
+function run_main () {
     local argv=()
     local opt=()
     while [ $# -gt 0 ]; do
@@ -191,6 +197,8 @@ function run_main() {
                 run_in_env /bin/pip $@ && exit $?;;
             -h|--help)
                 run_show_usage && exit;;
+            --autoupdate)
+                run_autoupdate && exit;;
             -q|--quiet)
                 VPYTHON_QUIET=1
                 run_in_env /bin/python $@ && exit $?;;
