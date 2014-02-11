@@ -71,7 +71,7 @@ function envpath () {
     local pythons
     local env
     while [ ! "$env" ]; do
-        pythons=$(find $DIRNAME -maxdepth 3 -executable -path "$DIRNAME/*/bin/python" 2>/dev/null | head -n 1)
+        pythons=$(find $DIRNAME -maxdepth 3 -path "$DIRNAME/*/bin/python" | head -n 1)
         env="$(echo ${pythons:${#DIRNAME}} | cut -d"/" -f2)"
         #break if we reached root
         ([ "$DIRNAME" == "/" ] || [ "$env" ]) && break
