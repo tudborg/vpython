@@ -167,9 +167,9 @@ function run_in_env () {
     #(we should if it is a python file, so, not a directory, essentially)
     local args=()
     if [ -d $path ]; then
-        args=$@
+        args="$@"
     else
-        args=$path $@
+        args="$path $@"
     fi
 
     [ ! $VPYTHON_QUIET ] && echo "Using virtualenv at \"$VIRTUAL_ENV\"" >&2
