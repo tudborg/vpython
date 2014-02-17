@@ -71,7 +71,7 @@ function envpath () {
     local pythons
     local env
     while [ ! "$env" ]; do
-        pythons=$(find $DIRNAME -maxdepth 3 -path "$DIRNAME/*/bin/python" | head -n 1)
+        pythons=$(find $DIRNAME -maxdepth 3 -path "$DIRNAME/*/bin/python" 2>/dev/null | head -n 1)
         env="$(echo ${pythons:${#DIRNAME}} | cut -d"/" -f2)"
         #break if we reached root
         ([ "$DIRNAME" == "/" ] || [ "$env" ]) && break
@@ -192,29 +192,26 @@ function run_autoupdate () {
 # Parse options, run accordingly
 # inspiration from http://stackoverflow.com/questions/17016007/bash-getopts-optional-arguments
 function run_main () {
-    local argv=()
-    local opt=()
-    while [ $# -gt 0 ]; do
-        opt=$1
-        shift
-        case ${opt} in
-            -i|--install)
-                run_install $@ && exit;;
-            -f|--find)
-                run_find $@ && exit;;
-            -p|--pip)
-                run_in_env /bin/pip $@ && exit $?;;
-            -h|--help)
-                run_show_usage && exit;;
-            --autoupdate)
-                run_autoupdate && exit;;
-            -q|--quiet)
-                VPYTHON_QUIET=1
-                run_in_env /bin/python $@ && exit $?;;
-            *) #anything else than the above should be run with python, including $opt
-                run_in_env /bin/python $opt $@ && exit $?;;
-        esac
-    done
+    local opt
+    opt=$1
+    shift
+    case ${opt} in
+        -i|--install)
+            run_install $@ && exit;;
+        -f|--find)
+            run_find $@ && exit;;
+        -p|--pip)
+            run_in_env /bin/pip $@ && exit $?;;
+        -h|--help)
+            run_show_usage && exit;;
+        --autoupdate)
+            run_autoupdate && exit;;
+        -q|--quiet)
+            VPYTHON_QUIET=1
+            run_in_env /bin/python $@ && exit $?;;
+        *) #anything else than the above should be run with python, including $opt
+            run_in_env /bin/python $opt $@ && exit $?;;
+    esac
 }
 
 run_main $@
