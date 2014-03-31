@@ -29,15 +29,15 @@ Install
 
 ### With install script
 
-1) run `install.sh`
-2) You're done!
+1. run `install.sh`
+2. You're done!
 
 or
 
-1) Copy (or symlink) the `vpython.sh` to somewhere on your path,
+1. Copy (or symlink) the `vpython.sh` to somewhere on your path,
 like `/usr/bin/vpython`.
-2) Do the same with `vpip.sh`
-3) You're done!
+2. Do the same with `vpip.sh`
+3. You're done!
 
 
 Usage
