@@ -4,8 +4,8 @@ vpython
 
 vpython is a tiny helper script for running your python files inside virtualenv.
 
-You don't have to worry about sourcing the `activate` script,
-you don't have to point to your virtualenv path,
+You don't have to worry about sourcing the `activate` script,  
+you don't have to point to your virtualenv path,  
 just use `vpython` instead of `python`.
 
 
@@ -27,10 +27,17 @@ a bunch of dependencies that you don't want to install globally.
 Install
 ---------------
 
-1) Copy (or symlink) the vpython.sh to somewhere on your path,
-like `/usr/bin/vpython`.
+### With install script
 
-2) there is no 2
+1) run `install.sh`
+2) You're done!
+
+or
+
+1) Copy (or symlink) the `vpython.sh` to somewhere on your path,
+like `/usr/bin/vpython`.
+2) Do the same with `vpip.sh`
+3) You're done!
 
 
 Usage
@@ -41,7 +48,7 @@ Run it like you would with `python`:
 $ vpython my_script.py
 ```
 
-Or use it in a script, as you would with `python`:
+Or use it in a script's shebang:
 ```python
 #!/usr/bin/vpython
 
