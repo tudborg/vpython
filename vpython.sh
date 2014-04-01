@@ -132,7 +132,7 @@ function run_find {
 
 #find a virtualenv on path given, run python inside
 function run_in_env {
-    #pass binary relative to env folder (like /bin/python) as first arg
+    #pass executable relative to env folder (like /bin/python) as first arg
     #and path to script or folder as second arg
     local program=$1
     local path=$2
