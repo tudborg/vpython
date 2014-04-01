@@ -8,21 +8,15 @@
 # Currently maintained by https://github.com/tbug
 # at https://github.com/tbug/vpython
 #
-
-# TODO:
-#   - Create autoupdate option
  
  
 ENV_NAME=${ENV_NAME:-'.virtualenv'}
-SCRIPT_URL="https://raw.github.com/tbug/vpython/master/vpython.sh"
 
- 
 # Check deps
 [ ! $(which virtualenv) ] && echo "virtualenv not found" && exit;
 
-
 # This is the best way that i have found to get an absolute path from a relative one
-function abspath () {
+function abspath {
     if [[ -d "$1" ]]
     then
         pushd "$1" >/dev/null
@@ -38,7 +32,7 @@ function abspath () {
     fi
 }
 
-function linkresolve () {
+function linkresolve {
     # Resolve link if needed
     local path=$1
     while [ -h "$path" ]; do
@@ -50,7 +44,7 @@ function linkresolve () {
     echo $path
 }
 
-function envpath () {
+function envpath {
     # get the virtualenv path if any
     local SOURCE="$(abspath "$1")"
     [ 127 -eq $? ] && return 127
@@ -87,7 +81,7 @@ function envpath () {
     return 0
 }
 
-function printcode () {
+function printcode {
     case $1 in
         0) ;; #0 is ok, no message
         120) echo "could not find virtualenv";;
@@ -98,7 +92,7 @@ function printcode () {
 }
 
 # Our usage help text
-function run_show_usage () {
+function run_show_usage {
     echo "Usage:"
     echo "    vpython --help                                this help"
     echo "    vpython --pip </path/to/env> [<pip_ags>...]   call the virtualenv pip"
@@ -109,7 +103,7 @@ function run_show_usage () {
 }
 
  # Install a new virtualenv
-function run_install () {
+function run_install {
     local base="$(abspath "$1")"
     local envdir
     shift #shift off the first arg (the dir)
@@ -124,7 +118,7 @@ function run_install () {
 }
 
 #output found virtualenv path
-function run_find () {
+function run_find {
     [ 1 -gt $# ] && echo "Usage: vpython --find </path/to/search>" >&2 && exit 2
     local venv
     venv="$(envpath "$1")"
@@ -137,7 +131,7 @@ function run_find () {
 }
 
 #find a virtualenv on path given, run python inside
-function run_in_env () {
+function run_in_env {
     #pass binary relative to env folder (like /bin/python) as first arg
     #and path to script or folder as second arg
     local program=$1
@@ -180,18 +174,9 @@ function run_in_env () {
     exit $?
 }
 
-function run_autoupdate () {
-    #autoupdate this file from the github master branch
-    local self="$(linkresolve ${BASH_SOURCE[0]})"
-    echo "moving $self to $self.old" >&2
-    cp $self $self.old
-    echo "downloading new script to $self..." >&2
-    curl "$SCRIPT_URL" > $self
-}
-
 # Parse options, run accordingly
 # inspiration from http://stackoverflow.com/questions/17016007/bash-getopts-optional-arguments
-function run_main () {
+function run_main {
     local opt
     opt=$1
     shift
@@ -204,8 +189,6 @@ function run_main () {
             run_in_env /bin/pip $@ && exit $?;;
         -h|--help)
             run_show_usage && exit;;
-        --autoupdate)
-            run_autoupdate && exit;;
         -q|--quiet)
             VPYTHON_QUIET=1
             run_in_env /bin/python $@ && exit $?;;
