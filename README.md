@@ -8,6 +8,10 @@ You don't have to worry about sourcing the `activate` script,
 you don't have to point to your virtualenv path,  
 just use `vpython` instead of `python`.
 
+- - -
+
+I did a post on this tool on my blog: http://tudb.org/articles/2014/03/31/vpython/
+
 
 What?
 ----------------
