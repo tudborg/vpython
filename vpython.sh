@@ -100,6 +100,7 @@ function run_show_usage {
     echo "    vpython --find </path/to/search/for/env>      return virtualenv path if found, else exits with non-0"
     echo "    vpython <python_file>                         call a python file inside a virtualenv"
     echo "    vpython <directory>                           start a python shell inside a virtualenv"
+    echo "    vpython --bin                                 run scripts from the bin folder in the virtualenv"
 }
 
  # Install a new virtualenv
@@ -168,8 +169,13 @@ function run_in_env {
 
     [ ! $VPYTHON_QUIET ] && echo "Using virtualenv at \"$VIRTUAL_ENV\"" >&2
 
-    # Now call the $PROGRAM inside our env
-    $VIRTUAL_ENV$program $args
+    if [ -f $VIRTUAL_ENV$program ]; then
+        # Now call the $PROGRAM inside our env
+        $VIRTUAL_ENV$program $args
+    else
+        echo "Could not find $VIRTUAL_ENV$program" >&2
+        exit 1
+    fi
 
     exit $?
 }
@@ -187,6 +193,8 @@ function run_main {
             run_find $@ && exit;;
         -p|--pip)
             run_in_env /bin/pip $@ && exit $?;;
+        --bin)
+            run_in_env /bin/$@ && exit $?;;
         -h|--help)
             run_show_usage && exit;;
         -q|--quiet)
