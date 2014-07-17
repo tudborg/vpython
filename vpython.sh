@@ -174,7 +174,7 @@ function run_in_env {
         $VIRTUAL_ENV$program $args
     else
         echo "Could not find $VIRTUAL_ENV$program" >&2
-        exit 1
+        exit 127
     fi
 
     exit $?
@@ -196,7 +196,7 @@ function run_main {
         --bin)
             run_in_env /bin/$@ && exit $?;;
         -h|--help)
-            run_show_usage && exit;;
+            run_show_usage && exit 1;;
         -q|--quiet)
             VPYTHON_QUIET=1
             run_in_env /bin/python $@ && exit $?;;

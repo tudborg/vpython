@@ -11,9 +11,11 @@ GLOBAL_INSTALL="/usr/bin"
 
 VPIP_NAME="vpip"
 VPYTHON_NAME="vpython"
+VIPYTHON_NAME="vipython"
 
 # Check if vpython and vpip is next to the installer (someone cloned the repo and run it)
 VPIP_PATH="$DIR/$VPIP_NAME.sh"
+VIPYTHON_PATH="$DIR/$VIPYTHON_NAME.sh"
 VPYTHON_PATH="$DIR/$VPYTHON_NAME.sh"
 
 if [ "${1}" == "-u" ]; then
@@ -48,6 +50,7 @@ if [ "$TARGET_DIR" == "$GLOBAL_INSTALL" ]; then
     fi
 fi
 
+#vpython first
 if [ -f "$TARGET_DIR/$VPYTHON_NAME" ]; then
     if $ALLOW_UPDATE; then
         rm "$TARGET_DIR/$VPYTHON_NAME"
@@ -58,7 +61,7 @@ if [ -f "$TARGET_DIR/$VPYTHON_NAME" ]; then
 fi
 ln -s "$VPYTHON_PATH" "$TARGET_DIR/$VPYTHON_NAME"
 
-
+#then vpip
 if [ -f "$TARGET_DIR/$VPIP_NAME" ]; then
     if $ALLOW_UPDATE; then
         rm "$TARGET_DIR/$VPIP_NAME"
@@ -68,3 +71,14 @@ if [ -f "$TARGET_DIR/$VPIP_NAME" ]; then
     fi
 fi
 ln -s "$VPIP_PATH" "$TARGET_DIR/$VPIP_NAME"
+
+#then vipython
+if [ -f "$TARGET_DIR/$VIPYTHON_NAME" ]; then
+    if $ALLOW_UPDATE; then
+        rm "$TARGET_DIR/$VIPYTHON_NAME"
+    else
+        echo -e "vpip file already exists at $TARGET_DIR/$VIPYTHON_NAME\nRun installer with -u flag to allow update:\n    ${0} -u" >&2
+        exit 1
+    fi
+fi
+ln -s "$VIPYTHON_PATH" "$TARGET_DIR/$VIPYTHON_NAME"
