@@ -16,6 +16,13 @@ VPYTHON_NAME="vpython"
 VPIP_PATH="$DIR/$VPIP_NAME.sh"
 VPYTHON_PATH="$DIR/$VPYTHON_NAME.sh"
 
+if [ "${1}" == "-u" ]; then
+    ALLOW_UPDATE=true
+else
+    ALLOW_UPDATE=false
+fi
+
+
 if [ ! -f $VPYTHON_PATH ] || [ ! -f $VPIP_PATH ]; then
     # Install by cloning repo and running the install again
     echo "Clone the entire repository at ${REPO_URL} and run the installer from the source" >&2
@@ -35,20 +42,29 @@ fi
 if [ "$TARGET_DIR" == "$GLOBAL_INSTALL" ]; then
     # If we target global, we need root
     if [ "$(id -u)" != "0" ]; then
-       echo "You must run the installer as root for it to symlink vpython to /usr/bin" 1>&2
-       echo "Alternatively create a ~/bin folder, add it to your path, and run the installer again" 1>&2
+       echo "You must run the installer as root for it to symlink vpython to /usr/bin" >&2
+       echo "Alternatively create a ~/bin folder, add it to your path, and run the installer again" >&2
        exit 1
     fi
 fi
 
-if [ ! -f "$TARGET_DIR/$VPYTHON_NAME" ]; then
-    ln -s "$VPYTHON_PATH" "$TARGET_DIR/$VPYTHON_NAME"
-else
-    echo "$TARGET_DIR/$VPYTHON_NAME already exists" 1>&2
+if [ -f "$TARGET_DIR/$VPYTHON_NAME" ]; then
+    if $ALLOW_UPDATE; then
+        rm "$TARGET_DIR/$VPYTHON_NAME"
+    else
+        echo -e "vpython file already exists at $TARGET_DIR/$VPYTHON_NAME\nRun installer with -u flag to allow update:\n    ${0} -u" >&2
+        exit 1
+    fi
 fi
+ln -s "$VPYTHON_PATH" "$TARGET_DIR/$VPYTHON_NAME"
 
-if [ ! -f "$TARGET_DIR/$VPIP_NAME" ]; then
-    ln -s "$VPIP_PATH" "$TARGET_DIR/$VPIP_NAME"
-else
-    echo "$TARGET_DIR/$VPIP_NAME already exists" 1>&2
+
+if [ -f "$TARGET_DIR/$VPIP_NAME" ]; then
+    if $ALLOW_UPDATE; then
+        rm "$TARGET_DIR/$VPIP_NAME"
+    else
+        echo -e "vpip file already exists at $TARGET_DIR/$VPIP_NAME\nRun installer with -u flag to allow update:\n    ${0} -u" >&2
+        exit 1
+    fi
 fi
+ln -s "$VPIP_PATH" "$TARGET_DIR/$VPIP_NAME"
