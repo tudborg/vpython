@@ -33,7 +33,8 @@ Install
 
 ### With install script
 
-1. run `install.sh`
+1. Clone this repository to your prefered folder (mine is `~/src/<project>`)
+1. go to your new directory and run `install.sh`
 2. You're done!
 
 or
