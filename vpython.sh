@@ -13,7 +13,7 @@
 ENV_NAME=${ENV_NAME:-'virtualenv'}
 
 # Check deps
-[ ! $(which virtualenv) ] && echo "virtualenv not found" && exit;
+[ ! $(which virtualenv) ] && echo "virtualenv not found" && exit 1;
 
 # This is the best way that i have found to get an absolute path from a relative one
 function abspath {
