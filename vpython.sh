@@ -10,7 +10,7 @@
 #
  
  
-ENV_NAME=${ENV_NAME:-'.virtualenv'}
+ENV_NAME=${ENV_NAME:-'virtualenv'}
 
 # Check deps
 [ ! $(which virtualenv) ] && echo "virtualenv not found" && exit;
