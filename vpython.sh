@@ -135,8 +135,8 @@ function run_find {
 function run_in_env {
     #pass executable relative to env folder (like /bin/python) as first arg
     #and path to script or folder as second arg
-    local program=$1
-    local path=$2
+    local program="$1"
+    local path="$2"
     shift && shift
 
     [ ! "$path" ] && path="$(pwd)"
@@ -158,23 +158,21 @@ function run_in_env {
     # And unset the PYTHONHOME
     unset PYTHONHOME
 
-    #check if we should pass the path as the first arg to python
-    #(we should if it is a python file, so, not a directory, essentially)
-    local args=()
-    if [ -d $path ]; then
-        args="$@"
-    else
-        args="$path $@"
-    fi
 
     [ ! $VPYTHON_QUIET ] && echo "Using virtualenv at \"$VIRTUAL_ENV\"" >&2
-
     if [ -f $VIRTUAL_ENV$program ]; then
         # Now call the $PROGRAM inside our env
-        $VIRTUAL_ENV$program $args
+
+        #check if we should pass the path as the first arg to python
+        #(we should if it is a python file, so, not a directory, essentially)
+        if [ -d $path ]; then
+            $VIRTUAL_ENV$program "$@"
+        else
+            $VIRTUAL_ENV$program "$path" "$@"
+        fi
     else
         echo "Could not find $VIRTUAL_ENV$program" >&2
-        exit 1
+        exit 127
     fi
 
     exit $?
@@ -188,22 +186,21 @@ function run_main {
     shift
     case ${opt} in
         -i|--install)
-            run_install $@ && exit;;
+            run_install "$@" && exit;;
         -f|--find)
-            run_find $@ && exit;;
+            run_find "$@" && exit;;
         -p|--pip)
-            run_in_env /bin/pip $@ && exit $?;;
+            run_in_env /bin/pip "$@" && exit $?;;
         --bin)
-            run_in_env /bin/$@ && exit $?;;
+            run_in_env "/bin/$@" && exit $?;;
         -h|--help)
-            run_show_usage && exit;;
+            run_show_usage && exit 1;;
         -q|--quiet)
             VPYTHON_QUIET=1
-            run_in_env /bin/python $@ && exit $?;;
+            run_in_env /bin/python "$@" && exit $?;;
         *) #anything else than the above should be run with python, including $opt
-            run_in_env /bin/python $opt $@ && exit $?;;
+            run_in_env /bin/python $opt "$@" && exit $?;;
     esac
 }
-
-run_main $@
+run_main "$@"
 exit $?
